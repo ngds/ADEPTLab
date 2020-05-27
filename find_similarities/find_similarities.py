@@ -5,12 +5,14 @@ import json
 import sys
 import os
 
+import pickle
 import pandas as pd
 import numpy as np
 import mplcursors
 import matplotlib.pyplot as plt
 
-import pickle
+from ipyfilechooser import FileChooser
+
 
 
 class GenerateSimilarities:
@@ -26,7 +28,6 @@ class GenerateSimilarities:
     def __init__(self, folder_loc, file_loc):
         self.FILES_LOC = folder_loc
         self.FILE_TO_READ = file_loc
-
 
     def parse_bibjson(self):
         with open(self.FILES_LOC + self.BIBJSON, 'r', encoding="utf-8") as f:
@@ -81,7 +82,7 @@ class GenerateSimilarities:
         else:
             return self.tokenize_and_vectorize_files(nlp_model)
 
-    def find_most_similar(self, filename, nlp_model, token_dict):
+    def compute_similarities(self, filename, nlp_model, token_dict):
         print("Calculating similarities")
         if not os.path.isfile(filename):
             print(f"Couldn't find file {filename}! Please make sure that the file exists in the directory and is visible")
@@ -97,29 +98,27 @@ class GenerateSimilarities:
             similarity = tokens.similarity(new_file_tokens)
             # round to 2 decimal places
             sim_dict[name[1]] = (similarity * 100)  
-            print(f"Similarity: {(similarity * 100)} to file {filename}")
 
         print("Computed all similarities")
         return sim_dict      
 
-    def plot_similarities(self, sim_dict):
-        print("Plotting sims")
-        plot_width = 400
-        names = list(sim_dict.keys())
-        percents = list(sim_dict.values())
-        
-        print(names)
-        print(percents)
+    def plot_similarities(self, sim_dict, num_to_display):
+        sorted_dict = {k: v for k, v in sorted(sim_dict.items(), key = lambda item: item[1])}
 
-        index = np.arange(len(names))
-        plt.bar(index, percents)
-        plt.xlabel('Filenames', fontsize=15)
-        plt.ylabel('Percent Similarity', fontsize=15)
-        plt.xticks(index, names, fontsize=10, rotation=30)
-        plt.title('Similarities')
+        fig, (ax1, ax2) = plt.subplots(1, 2)
+
+        ax1.set_xticks([])
+        ax1.set_yticks([])
+        ax1.axis('off')
+
+        fig.suptitle(f"Similarities to [INSERT FILENAME]")
+
+        cell_text = [[str(item[0]), str(round(item[1], 1)) + '%'] for item in list(sorted_dict.items())]
+
+        table = ax1.table(cellText=cell_text, colLabels=self.COL_TITLES, loc='center')
+        table.scale(1, 2)
+        ax2.plot([1], [1])
         plt.show()
-
-
 
     def run_similarity_finder(self):
         print("Loading spaCy model...")
@@ -132,8 +131,10 @@ class GenerateSimilarities:
         print("Token dictionary loaded... ")
         
         filename = self.FILE_TO_READ
-        sim_dict = self.find_most_similar(filename, nlp, token_dict)
-        self.plot_similarities(sim_dict)
+        sim_dict = self.compute_similarities(filename, nlp, token_dict)
+
+        # Change the number of files to display
+        self.plot_similarities(sim_dict, 4)
 
         
 
@@ -141,8 +142,8 @@ class GenerateSimilarities:
 if __name__ == "__main__":
     print("Starting...")
 
-    file_loc = input("Please enter the file location: ")
-    folder_loc = input("Please enter the folder location: ")
+    file_loc = sys.argv[1]
+    folder_loc = sys.argv[2]
 
     gs = GenerateSimilarities(folder_loc, file_loc)
     gs.run_similarity_finder()
