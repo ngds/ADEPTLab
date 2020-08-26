@@ -23,15 +23,6 @@ class GenerateSimilarities:
     TOKEN_FILE = "tokenizd_files_dictionary.p"
     FILE_TO_READ = ""
     RAW_CSS = '''
-    .table_cell {
-        background: #f0f0f0;
-        border-radius: 5px;
-    }
-    .file-sim-button-column {
-        background: #f0f0f0;
-        border-radius: 5px;
-        border: 1px white solid;
-    }
     .file-sim-button .bk-btn-group button {
         background: #03cafc;
         border: 1px solid #007391;
