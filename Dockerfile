@@ -14,6 +14,8 @@ RUN pip install -r /opt/config/requirements.txt
 
 RUN python -m spacy download en_trf_bertbaseuncased_lg
 
+RUN jupyter labextension install @pyviz/jupyterlab_pyviz
+
 ### START DATA TRANSFER
 COPY test_data/ /opt/base/test_data/
 ### END DATA TRANSFER

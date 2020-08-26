@@ -1,18 +1,17 @@
-import spacy
-import string
+import os
+import sys
 import glob
 import json
-import sys
-import os
-
+import spacy
+import param
+import panel as pn
+import string
 import pickle
-import pandas as pd
+import subprocess
+
 import numpy as np
-import mplcursors
-import matplotlib.pyplot as plt
-
+import pandas as pd
 from ipyfilechooser import FileChooser
-
 
 
 class GenerateSimilarities:
@@ -22,33 +21,84 @@ class GenerateSimilarities:
     BIBJSON = "bibjson.json"
     MODEL = "en_trf_bertbaseuncased_lg"
     TOKEN_FILE = "tokenizd_files_dictionary.p"
-    COL_TITLES = ('Title', 'Similarity')
     FILE_TO_READ = ""
+    RAW_CSS = '''
+    .table_cell {
+        background: #f0f0f0;
+        border-radius: 5px;
+    }
+    .file-sim-button-column {
+        background: #f0f0f0;
+        border-radius: 5px;
+        border: 1px white solid;
+    }
+    .file-sim-button .bk-btn-group button {
+        background: #03cafc;
+        border: 1px solid #007391;
+        color: #ffffff;
+        border-radius: 0px;
+        white-space: pre;  
+        height: 50px; 
+    }
+    '''
 
     def __init__(self, folder_loc, file_loc):
+        pn.extension(raw_css=[self.RAW_CSS])
         self.FILES_LOC = folder_loc
         self.FILE_TO_READ = file_loc
+        self.final_data = []
+
+    def run_similarity_finder(self):
+        self.json_dict = self.parse_bibjson()
+        self.FILE_TO_READ_TITLE = self.extract_json_info('_gddid', self.FILE_TO_READ.split('/')[-1].split('.')[0], 'title')
+        print("Loading spaCy model...")
+        # load the spacy model
+        nlp = spacy.load(self.MODEL)
+
+        print("Attempting to load token dictionary...")
+        token_dict = self.get_model(nlp)
+
+        print("Token dictionary loaded... ")
+        
+        filename = self.FILE_TO_READ
+        sim_dict = self.compute_similarities(filename, nlp, token_dict)
+        self.final_data = list(sim_dict.items())
+
+        # Change the number of files to display
+        self.prepare_display()
+        self.update_table()
+
+    def get_model(self, nlp_model):
+        if os.path.isfile(self.FILES_LOC + self.TOKEN_FILE):
+            return pickle.load( open(self.FILES_LOC + self.TOKEN_FILE, "rb"))
+        else:
+            return self.tokenize_and_vectorize_files(nlp_model)
 
     def parse_bibjson(self):
         with open(self.FILES_LOC + self.BIBJSON, 'r', encoding="utf-8") as f:
             data = json.load(f)
         return data
 
+    """
+    field is the name of the field in the json, value is the value to compare it to, ret_field is the field in
+    the json to return once the correct value has been found
+    """
+    def extract_json_info(self, field, value, ret_field):
+        for file_json in self.json_dict:
+            if file_json[field] == value:
+                return file_json[ret_field]
+
     def tokenize_and_vectorize_files(self, nlp_model):
         print("Token dictionary file not found... Tokenizing files, please wait:")
         files_parsed = {}
         files = glob.glob(self.FILES_LOC + self.FILES_TYPE)
 
-        json_dict = self.parse_bibjson()
         files_processed = 0
 
         for filename in files:
             # find the correseponding title in json
-            title = ""
-            for file_json in json_dict:
-                if file_json['_gddid'] == filename[len(self.FILES_LOC):-4]:
-                    title = file_json['title']
-                    break
+            title = self.extract_json_info('_gddid', filename[len(self.FILES_LOC):-4], 'title')
+
             # If we couldn't find the filename then just skip it
             if title == "":
                 continue
@@ -58,7 +108,7 @@ class GenerateSimilarities:
             
             file_failed = False
             try:
-                files_parsed[(filename, title[:10] + "...")] = nlp_model(file_text)
+                files_parsed[(filename, title)] = nlp_model(file_text)
             except Exception as e:
                 f.close()
                 file_failed = True
@@ -76,12 +126,6 @@ class GenerateSimilarities:
 
         return files_parsed        
 
-    def get_model(self, nlp_model):
-        if os.path.isfile(self.FILES_LOC + self.TOKEN_FILE):
-            return pickle.load( open(self.FILES_LOC + self.TOKEN_FILE, "rb"))
-        else:
-            return self.tokenize_and_vectorize_files(nlp_model)
-
     def compute_similarities(self, filename, nlp_model, token_dict):
         print("Calculating similarities")
         if not os.path.isfile(filename):
@@ -97,53 +141,52 @@ class GenerateSimilarities:
         for name, tokens in token_dict.items():
             similarity = tokens.similarity(new_file_tokens)
             # round to 2 decimal places
-            sim_dict[name[1]] = (similarity * 100)  
+            sim_dict[name[1]] = int(similarity * 100)
 
         print("Computed all similarities")
         return sim_dict      
 
-    def plot_similarities(self, sim_dict, num_to_display):
-        sorted_dict = {k: v for k, v in sorted(sim_dict.items(), key = lambda item: item[1])}
+    def prepare_display(self):
+        self.result_to_show_slider = pn.widgets.IntSlider(name="Results to show", start=1, end=len(self.final_data), step=1, value=3)
+        self.file_column = pn.Column("Similarities", css_classes=[])
+        self.result_to_show_slider.param.watch(self.update_table, ['value'])
+        self.result_display = pn.Row()
 
-        fig, (ax1, ax2) = plt.subplots(1, 2)
+    """
+    Data given like 
+    [ [Papername, %Sim],
+      [Papername, %Sim] ]
+    """
+    def update_table(self, events=None):
+        self.file_column.clear()
+        self.result_display.clear()
+        for filesim in self.final_data[:self.result_to_show_slider.value]:
+            button = pn.widgets.Button(name=f"{filesim[0]}\t|\t{filesim[1]}%", margin=0, css_classes=['file-sim-button'])
+            button.on_click(self.display_info_for_file)
+            self.file_column.append(button)
+        self.file_column.append(self.result_to_show_slider)
+        self.result_display.append(self.file_column)
+        display(self.result_display)
 
-        ax1.set_xticks([])
-        ax1.set_yticks([])
-        ax1.axis('off')
+    def display_info_for_file(self, *events):
+        self.update_table()
+        for event in events:
+            filename = event.obj.name.split('|')
+            mkdn = pn.pane.Markdown(f'''
+            ###{filename[0]}  
+            ``{filename[1]} to`` **{self.FILE_TO_READ_TITLE}**  
+            <{self.extract_json_info('title', self.FILE_TO_READ_TITLE, 'link')[0]['url']}>  
+            ''')
+            self.result_display.append(pn.Spacer())
+            self.result_display.append(mkdn)
+            display(self.result_display)
 
-        fig.suptitle(f"Similarities to [INSERT FILENAME]")
-
-        cell_text = [[str(item[0]), str(round(item[1], 1)) + '%'] for item in list(sorted_dict.items())]
-
-        table = ax1.table(cellText=cell_text, colLabels=self.COL_TITLES, loc='center')
-        table.scale(1, 2)
-        ax2.plot([1], [1])
-        plt.show()
-
-    def run_similarity_finder(self):
-        print("Loading spaCy model...")
-        # load the spacy model
-        nlp = spacy.load(self.MODEL)
-
-        print("Attempting to load token dictionary...")
-        token_dict = self.get_model(nlp)
-
-        print("Token dictionary loaded... ")
-        
-        filename = self.FILE_TO_READ
-        sim_dict = self.compute_similarities(filename, nlp, token_dict)
-
-        # Change the number of files to display
-        self.plot_similarities(sim_dict, 4)
-
-        
-
-       
 if __name__ == "__main__":
-    print("Starting...")
+    print("Starting....")
 
     file_loc = sys.argv[1]
     folder_loc = sys.argv[2]
-
+    
     gs = GenerateSimilarities(folder_loc, file_loc)
     gs.run_similarity_finder()
+
