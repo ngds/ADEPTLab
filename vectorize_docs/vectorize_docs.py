@@ -5,10 +5,12 @@ import spacy
 import pickle
 import requests
 from requests.exceptions import HTTPError
+from ipyfilechooser import FileChooser
+
 
 class VectorizeDocs:
 
-    MODEL = "en_trf_bertbaseuncased_lg"
+    MODEL = "en_vectors_web_lg"
     DOCS_PER_PICKLE = 10
 
     def __init__(self, json_loc, output_loc):
@@ -95,13 +97,13 @@ class VectorizeDocs:
                 time_end = time.time()
                 if num_processed % self.DOCS_PER_PICKLE == 0:
                     pickle.dump(files_parsed, 
-                        open(f"{self.OUTPUT_LOC.strip('/')}/v_{title}{num_processed - self.DOCS_PER_PICKLE}to{num_processed}.p", 
+                        open(f"{self.OUTPUT_LOC}v_{title}{num_processed - self.DOCS_PER_PICKLE}to{num_processed}.p", 
                         "wb"))
                     files_parsed = {}
                 print(f"Current: {time_end - timestart}\tAvg: {(time_end - time_total) / num_processed}")
             
         pickle.dump(files_parsed, 
-                    open(f"{self.OUTPUT_LOC.strip('/')}/v_{title}{num_processed - (num_processed % self.DOCS_PER_PICKLE)}to{num_processed}.p", 
+                    open(f"{self.OUTPUT_LOC}v_{title}{num_processed - (num_processed % self.DOCS_PER_PICKLE)}to{num_processed}.p", 
                     "wb"))
             
 
@@ -113,6 +115,8 @@ if __name__ == "__main__":
 
     json_loc = sys.argv[1]
     output_filename = sys.argv[2]
+    print("Json loc: " + str(json_loc))
+    print("Output loc: " + str(output_filename))
 
     vd = VectorizeDocs(json_loc, output_filename)
     # {'title': [doc1, doc2], 'title': [doc1, doc2] ... }

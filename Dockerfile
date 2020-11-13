@@ -14,7 +14,7 @@ COPY vectorize_docs/ /opt/base/vectorize_docs/
 
 RUN pip install -r /opt/config/requirements.txt
 
-RUN python -m spacy download en_trf_bertbaseuncased_lg
+RUN python -m spacy download en_vectors_web_lg
 
 RUN jupyter labextension install @pyviz/jupyterlab_pyviz
 

@@ -19,7 +19,7 @@ class GenerateSimilarities:
     FILES_LOC = ""
     FILES_TYPE = "*.txt"
     BIBJSON = "bibjson.json"
-    MODEL = "en_trf_bertbaseuncased_lg"
+    MODEL = "en_vectors_web_lg"
     TOKEN_FILE = "tokenizd_files_dictionary.p"
     FILE_TO_READ = ""
     RAW_CSS = '''
@@ -177,7 +177,13 @@ if __name__ == "__main__":
 
     file_loc = sys.argv[1]
     folder_loc = sys.argv[2]
+
+    print("File: " + str(file_loc))
+    print("Folder: " + str(folder_loc))
     
     gs = GenerateSimilarities(folder_loc, file_loc)
-    gs.run_similarity_finder()
+    gs.final_data = [['filename1', 10], ['filename2', 20], ['filename3', 30], ['filename4', 40]]
+    #gs.run_similarity_finder()
+    gs.prepare_display()
+    gs.update_table()
 
