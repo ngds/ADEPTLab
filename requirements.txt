@@ -4,3 +4,4 @@ mplcursors>=0.0.0
 ipyfilechooser>=0.3.4
 param>=0.9.5
 panel>=0.9.5
+colorama>=0.4.4
