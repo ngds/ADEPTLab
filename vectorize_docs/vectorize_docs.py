@@ -60,12 +60,12 @@ def download_data():
             continue
         try:
             api_url = f'{base_url}?api_key={api_list.get(api_name)}&products={products}'
-            print("Trying " + api_name + ":" + api_url)
+            print("Requesting " + api_name + "...")
             response = requests.get(api_url)
             # If the response was successful, no Exception will be raised
             response.raise_for_status()
             resp_json = response.json()
-            print("Parsing " + api_name)
+            print("Prepping " + api_name + "...")
             docs[api_name] = parse_api_response(resp_json, products)
         except HTTPError as http_err:
             print(f'HTTP error occurred: {http_err}')  # Python 3.6
@@ -107,6 +107,7 @@ def tokenize_and_vectorize_files(docs):
     num_processed = 0
     time_total = time.time()
     for title in docs.keys():
+        print("Vectorizing docs from " + title)
         fulltexts = docs.get(title)
         i = 0
         for file_text in fulltexts:
@@ -117,7 +118,6 @@ def tokenize_and_vectorize_files(docs):
                 # TODO: Change naming scheme
                 files_parsed[f"{title}_{i}"] = nlp(file_text)
                 i += 1
-                print("Vectorizing file in " + title + str(i))
             except Exception as e:
                 print(str(e))
             time_end = time.time()
@@ -127,7 +127,7 @@ def tokenize_and_vectorize_files(docs):
                     "wb"))
                 files_parsed = {}
             print(f"Current: {time_end - timestart}\tAvg: {(time_end - time_total) / num_processed}")
-        
+        print("Finished " + title)
     pickle.dump(files_parsed, 
                 open(f"{OUTPUT_LOC}v_{title}{num_processed - (num_processed % DOCS_PER_PICKLE)}to{num_processed}.p", 
                 "wb"))
