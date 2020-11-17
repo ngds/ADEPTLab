@@ -2,17 +2,6 @@ FROM jupyter/scipy-notebook:5b2160dfd919
 
 USER root
 
-# copy over program files
-RUN mkdir /opt/config
-
-RUN mkdir /home/jovyan/base
-
-ADD requirements.txt /opt/config
-
-COPY find_similarities/ /app/find_similarities/
-
-COPY vectorize_docs/ /app/vectorize_docs/
-
 RUN pip install -r /opt/config/requirements.txt
 
 RUN python -m spacy download en_vectors_web_lg
@@ -75,6 +64,17 @@ COPY jupyter_notebook_config.json /opt/conda/etc/jupyter/jupyter_notebook_config
 # Add the jovyan user to UID 1000
 RUN groupadd jovyan && usermod -aG jovyan jovyan && usermod -d /home/jovyan -u 1000 jovyan
 RUN chown -R jovyan:jovyan /home/jovyan
+
+# copy over program files
+RUN mkdir /opt/config
+
+RUN mkdir /home/jovyan/base
+
+ADD requirements.txt /opt/config
+
+COPY find_similarities/ /home/jovyan/base/find_similarities/
+
+COPY vectorize_docs/ /home/jovyan/base/vectorize_docs/
 
 USER jovyan
 WORKDIR /home/jovyan
