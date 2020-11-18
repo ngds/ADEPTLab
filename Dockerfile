@@ -12,6 +12,8 @@ COPY find_similarities/ /opt/base/find_similarities/
 
 COPY vectorize_docs/ /opt/base/vectorize_docs/
 
+COPY annotate/ /opt/base/annotate/
+
 RUN pip install -r /opt/config/requirements.txt
 
 RUN python -m spacy download en_vectors_web_lg
