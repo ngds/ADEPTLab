@@ -2,6 +2,12 @@ FROM jupyter/scipy-notebook:5b2160dfd919
 
 USER root
 
+RUN mkdir /opt/config
+
+RUN mkdir /home/jovyan/base
+
+ADD requirements.txt /opt/config
+
 RUN pip install -r /opt/config/requirements.txt
 
 RUN python -m spacy download en_vectors_web_lg
@@ -24,6 +30,8 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     vim
 
+
+    
 # Install iCommands
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - \
     && echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods.list \
@@ -64,15 +72,14 @@ RUN groupadd jovyan && usermod -aG jovyan jovyan && usermod -d /home/jovyan -u 1
 RUN chown -R jovyan:jovyan /home/jovyan
 
 # copy over program files
-RUN mkdir /opt/config
-
-RUN mkdir /home/jovyan/base
-
-ADD requirements.txt /opt/config
 
 COPY find_similarities/ /home/jovyan/base/find_similarities/
 
 COPY vectorize_docs/ /home/jovyan/base/vectorize_docs/
+
+COPY annotate/ /home/jovyan/base/annotate/
+
+COPY train_model/ /home/jovyan/base/train_model/
 
 USER jovyan
 WORKDIR /home/jovyan
