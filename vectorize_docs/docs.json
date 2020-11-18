@@ -1,0 +1,17 @@
+{
+    "url": {
+        "endpoint": "https://xdd.wisc.edu/api/products"
+    },
+    "testsets": [{
+            "key": "c2f661f9-8f34-4d14-b023-a8edbb55fb66",
+            "name": "geothermal_data"
+        },
+        {
+            "key": "6c5023f4-a4d5-466d-810e-c8882335c366",
+            "name": "lithologies"
+        }
+    ],
+    "products": [{
+        "product": "scienceparse"
+    }]
+}

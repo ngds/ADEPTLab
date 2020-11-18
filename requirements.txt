@@ -5,3 +5,5 @@ ipyfilechooser>=0.3.4
 param>=0.9.5
 panel>=0.9.5
 colorama>=0.4.4
+plac>=1.2.0
+
