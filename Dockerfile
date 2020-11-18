@@ -73,16 +73,17 @@ RUN chown -R jovyan:jovyan /home/jovyan
 
 # copy over program files
 
-COPY find_similarities/ /home/jovyan/base/find_similarities/
+WORKDIR /home/jovyan/base
 
-COPY vectorize_docs/ /home/jovyan/base/vectorize_docs/
+COPY find_similarities/ find_similarities/
 
-COPY annotate/ /home/jovyan/base/annotate/
+COPY vectorize_docs/ vectorize_docs/
 
-COPY train_model/ /home/jovyan/base/train_model/
+COPY annotate/ annotate/
+
+COPY train_model/ train_model/
 
 USER jovyan
-WORKDIR /home/jovyan
 
 EXPOSE 8888
 
