@@ -24,8 +24,6 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     vim
 
-
-    
 # Install iCommands
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - \
     && echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods.list \
