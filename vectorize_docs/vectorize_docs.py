@@ -158,6 +158,7 @@ print("Starting...")
 
 json_loc = sys.argv[1]
 output_filename = sys.argv[2]
+output_filename = output_filename.strip('\\/') + '/'
 print("Json loc: " + str(json_loc))
 print("Output loc: " + str(output_filename))
 

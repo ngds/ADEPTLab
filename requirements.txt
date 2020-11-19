@@ -1,7 +1,8 @@
 spacy>=2.0.0
 nltk>=3.0
 mplcursors>=0.0.0
-ipyfilechooser>=0.3.4
+ipywidgets==7.4.2
+ipyfilechooser==0.3.4
 param>=0.9.5
 panel>=0.9.5
 colorama>=0.4.4
