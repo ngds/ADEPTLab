@@ -18,46 +18,38 @@ OUTPUT_LOC = ""
 PARSED_JSON = None
 
 api_list = {}
-button_list = {}
 
-def init(json_loc, output_loc):
+def init(json_loc, output_loc, api_names):
     global PARSED_JSON, OUTPUT_LOC
     pn.extension()
     PARSED_JSON = json.loads(open(json_loc, 'r', encoding='utf-8').read())
     OUTPUT_LOC = output_loc
-    print("Init")
-    asyncio.create_task(get_apis_to_download())
+    docs = download_data(apis)
+    tokenize_and_vectorize_files(docs)
 
-def wait_for_change(widget):
-    future = asyncio.Future()
-    def getvalue(change):
-        future.set_result(change.description)
-        widget.on_click(getvalue, remove=True) 
-        # we need to free up the binding to getvalue to avoid an InvalidState error
-        # buttons don't support unobserve
-        # so use `remove=True` 
-    widget.on_click(getvalue)
-    return future
 
 """
 given the parsed json from a file with API url,key, and products will request them and combine
 them into a single dataset
 """
-def download_data():
+def download_data(apis):
     print("Downloading data")
     if PARSED_JSON is None:
         exit()
-    
+
     base_url = PARSED_JSON.get("url").get("endpoint")
     products = PARSED_JSON.get("products")[0].get("product")
+    
+    
+    for api_pair in PARSED_JSON.get('testsets'):
+        api_list[api_pair.get("name")] = api_pair.get("key")
+        
     """ Not sure how to combine pructs into query, needs clarification
     for product in self.PARSED_JSON["products"]:
         products = f"{products}"
     """
     docs = dict()
-    for api_name in button_list.keys():
-        if button_list.get(api_name).value == False:
-            continue
+    for api_name in apis.split(" "):
         try:
             api_url = f'{base_url}?api_key={api_list.get(api_name)}&products={products}'
             print("Requesting " + api_name + "...")
@@ -119,47 +111,22 @@ def tokenize_and_vectorize_files(docs):
                 files_parsed[f"{title}_{i}"] = nlp(file_text)
                 i += 1
             except Exception as e:
-                print(str(e))
+                print("Error:"+str(e))
             time_end = time.time()
             if num_processed % DOCS_PER_PICKLE == 0:
+                print("Writing file: " + f"/{OUTPUT_LOC}v_{title}{num_processed - DOCS_PER_PICKLE}to{num_processed}.p")
                 pickle.dump(files_parsed, 
-                    open(f"{OUTPUT_LOC}v_{title}{num_processed - DOCS_PER_PICKLE}to{num_processed}.p", 
+                    open(f"/{OUTPUT_LOC}v_{title}{num_processed - DOCS_PER_PICKLE}to{num_processed}.p", 
                     "wb"))
                 files_parsed = {}
-            print(f"Current: {time_end - timestart}\tAvg: {(time_end - time_total) / num_processed}")
         print("Finished " + title)
-    pickle.dump(files_parsed, 
-                open(f"{OUTPUT_LOC}v_{title}{num_processed - (num_processed % DOCS_PER_PICKLE)}to{num_processed}.p", 
-                "wb"))
-        
-def submit():
-    for button in button_list.values():
-        button.disabled = True
-    print("Disabled buttons")
-    docs = download_data()
-    print("Downloaded data")
-    tokenize_and_vectorize_files(docs)
-
-async def get_apis_to_download():
-    for api in PARSED_JSON.get("testsets"):
-        name = api.get("name")
-        api_list[name] = api.get("key")
-        button_list[name] = pn.widgets.Checkbox(name=name)
-        display(button_list.get(name))
-
-    submit_button = widgets.Button(description="Submit")
-    display(submit_button)
-    await wait_for_change(submit_button)
-    submit()
-        
 
 
 print("Starting...")
 
 json_loc = sys.argv[1]
 output_filename = sys.argv[2]
+apis = sys.argv[3]
 output_filename = output_filename.strip('\\/') + '/'
-print("Json loc: " + str(json_loc))
-print("Output loc: " + str(output_filename))
 
-init(json_loc, output_filename)
+init(json_loc, output_filename, apis)

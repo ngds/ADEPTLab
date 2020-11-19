@@ -87,7 +87,7 @@ COPY annotate/ annotate/
 
 COPY train_model/ train_model/
 
-RUN chmod -R 777 /home/jovyan
+RUN chmod -R 777 /home/jovyan/base
 
 RUN jupyter serverextension enable --py jupyterlab --sys-prefix
 
