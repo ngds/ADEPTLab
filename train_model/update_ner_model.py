@@ -28,7 +28,7 @@ def get_data(output_loc):
     for file in os.listdir(output_loc):
         if(file.endswith('.txt')):
             text = open(os.path.join(output_loc, file)).read()
-            entities = pickle.load(open(os.path.join(output_loc, file.rstrip('rawtext.txt') + 'spacy.pkl'), 'rb'))
+            entities = pickle.load(open(os.path.join(output_loc, file.replace('rawtext.txt', '') + 'spacy.pkl'), 'rb'))
             train_data.append((text, {"entities": entities}))
     return train_data
 
