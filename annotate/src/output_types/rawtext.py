@@ -3,10 +3,6 @@ import os
 rawtext_partial = ""
 filename_end = "-rawtext.txt"
 
-def init():
-    global rawtext_partial
-    rawtext_partial = ""
-
 def add_annotation(tok):
     global rawtext_partial
     rawtext_partial += tok.word + " "
