@@ -1,4 +1,4 @@
-FROM jupyter/scipy-notebook:latest
+FROM jupyter/scipy-notebook:68d2d835fb16
 
 USER root
 
@@ -10,7 +10,7 @@ ADD requirements.txt /opt/config
 
 RUN pip install spacy
 
-RUN python -m spacy download en_vectors_web_lg
+RUN python -m spacy download en_core_web_trf
 
 
 # Install a few dependencies for iCommands, text editing, and monitoring instances
@@ -44,9 +44,9 @@ RUN pip install ipython-sql jupyterlab_sql psycopg2 \
     && jupyter lab build
 
 # install the irods plugin for jupyter lab -- non-functional beyond JupyterLab v1.0.9
-# RUN pip install jupyterlab_irods==3.0.2 \
-#   && jupyter serverextension enable --py jupyterlab_irods \
-#   && jupyter labextension install ijab
+RUN pip install jupyterlab_irods \
+    && jupyter serverextension enable --py jupyterlab_irods \
+    && jupyter labextension install ijab
 
 # install jupyterlab hub-extension, lab-manager, bokeh
 RUN jupyter lab --version \
