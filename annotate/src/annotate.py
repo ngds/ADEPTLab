@@ -8,7 +8,7 @@ from src.token_class import Token
 from src.output_types import spacy, stanfordnlp, rawtext
 from src.notebook import file_chooser, clear
 
-valid_inputs = ["0", "1", "2", "3", "4", "5", "6", "7"]
+valid_inputs = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
 
 PARTIAL_ANNS = os.path.join("partial_annotations")
 
@@ -28,6 +28,13 @@ exit_flag = False
 
 def exit():
     # workaround exit for Jupyter notebook, if necessary
+    global num_tokens, pos, back, curr_token, internal, words
+    num_tokens = 0
+    pos = 0
+    back = 0
+    curr_token = 0
+    internal = []
+    words = []
     if notebook_version:
         global exit_flag
         exit_flag = True
@@ -43,10 +50,11 @@ def print_status(token_idx):
 
 def print_tags():
     print("TAG OPTIONS: (press enter to leave untagged, b to go back, p to save progress and exit)")
-    print("0 people, including fictional\t\t4 companies, institutions, etc.")
-    print("1 nationalities, religions\t\t5 countries, cities, states")
-    print("2 mountains, rivers, etc.\t\t6 events--named hurricanes, etc")
-    print("3 buildings, airports, etc.\t\t7 measurements (e.g. weight, distance)")
+    print("0 people, including fictional\t\t5 countries, cities, states")
+    print("1 nationalities, religions\t\t6 events--named hurricanes, etc")
+    print("2 mountains, rivers, etc.\t\t7 measurements (e.g. weight, distance)")
+    print("3 buildings, airports, etc.\t\t8 coordinates")
+    print("4 companies, institutions, etc.\t\t")
 
 def get_partial():
     partial_versions = [file.split("partial-")[1].split(".pkl")[0] for file in os.listdir(PARTIAL_ANNS) if
@@ -94,10 +102,7 @@ def pause():
     global filename
     import pickle
     pickle.dump(internal, open(os.path.join(PARTIAL_ANNS, filename + "-partial-" + date.today().strftime("%b-%d-%Y") + ".pkl"), 'wb'))
-    print("The annotation progress so far has been saved. To continue annotating this document, simply "
-          "select the document as the input document again. The program will ask if you want to use this "
-          "set of annotations")
-    exit()
+
 
 def setup_doc():
     from src.notebook.file_chooser import doc_loc
@@ -121,6 +126,7 @@ def takedown():
     output_dir = output_loc.selected
     compute_all()
     print("The document has been annotated! Check the output folder to see the annotations saved as files prefixed with \"" + filename + "\"")
+    print("PLEASE NOTE: to resume annotating you must restart the Jupyter kernel by clicking Kernel->Restart.")
 
 def not_done():
     global curr_token, num_tokens, exit_flag
@@ -150,7 +156,10 @@ def get_tag():
         pos -= internal[curr_token - 1].length + 1 # step back to the beginning of last word
         curr_token -= 1
     elif tag == "p":
-        pause()
+        print("The annotation progress so far has been saved. To continue annotating this document, simply "
+              "select the document as the input document again. The program will ask if you want to use this "
+              "set of annotations")
+        exit()
     elif tag == "" or tag in valid_inputs:
         if tag in valid_inputs:
             internal[curr_token].tag = tag
@@ -158,6 +167,7 @@ def get_tag():
         curr_token += 1
     else:
         print(f"\n{Fore.RED}Sorry, not sure what that meant. Try again.{Style.RESET_ALL}")
+    pause()
     print()
 
 
