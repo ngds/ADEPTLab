@@ -6,7 +6,7 @@ A Dockerized Jupyter Lab repository for ADEPT notebooks. The collection includes
 + A document similarity finder
 + A spaCy NER model trainer
 
-
+## Running ADEPTLab locally
 #### To use the latest ADEPTLab docker image:
 1. Pull the image with `docker pull josephacevedo/adept_lab`
 2. Run the image locally with 
